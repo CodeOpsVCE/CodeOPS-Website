@@ -4,6 +4,7 @@ import { requireAuth } from "../middleware/auth.js";
 import multer from "multer";
 import path from "node:path";
 import fs from "node:fs";
+import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const router = Router();
@@ -27,7 +28,30 @@ const upload = multer({
   },
 });
 
-const publicUrl = (file) => `/uploads/${file.filename}`;
+const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "codeops-media";
+async function uploadToStorage(file) {
+  const storagePath = `uploads/${Date.now()}-${Math.random().toString(36).slice(2)}-${path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+  try {
+    const buffer = await readFile(file.path);
+    const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(storagePath, buffer, {
+      contentType: file.mimetype,
+      upsert: false,
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(storagePath);
+    return { storagePath, url: data.publicUrl };
+  } finally {
+    await fs.promises.rm(file.path, { force: true }).catch(() => {});
+  }
+}
+async function deleteFromStorage(url) {
+  const marker = `/storage/v1/object/public/${STORAGE_BUCKET}/`;
+  const index = url?.indexOf(marker) ?? -1;
+  if (index < 0) return;
+  const storagePath = decodeURIComponent(url.slice(index + marker.length));
+  const { error } = await supabase.storage.from(STORAGE_BUCKET).remove([storagePath]);
+  if (error) throw error;
+}
 
 const TABLES = {
   alert: "alerts",
@@ -183,7 +207,7 @@ router.post("/agents/import", requireAuth, async (req, res) => {
 router.post("/event", requireAuth, upload.single("poster"), async (req, res) => {
   try {
     if (req.file) {
-      const url = publicUrl(req.file);
+      const uploaded = await uploadToStorage(req.file);\n      const url = uploaded.url;
       await supabase.from("media").insert({ title: req.body.title || req.file.originalname, url, kind: "poster" });
       req.body.poster = url;
     }
@@ -211,7 +235,7 @@ router.post("/event", requireAuth, upload.single("poster"), async (req, res) => 
 router.put("/event/:id", requireAuth, upload.single("poster"), async (req, res) => {
   try {
     if (req.file) {
-      const url = publicUrl(req.file);
+      const uploaded = await uploadToStorage(req.file);\n      const url = uploaded.url;
       await supabase.from("media").insert({ title: req.body.title || req.file.originalname, url, kind: "poster" });
       req.body.poster = url;
     }
@@ -273,8 +297,8 @@ router.put("/contact", requireAuth, async (req, res) => {
     const { data: existing, error: existingError } = await supabase.from("contact").select("id").limit(1).maybeSingle();
     if (existingError) throw existingError;
     const { data, error } = existing
-      ? await supabase.from("contact").update(req.body).eq("id", existing.id).select("*").single()
-      : await supabase.from("contact").insert(req.body).select("*").single();
+      ? await supabase.from("contact").update(toSnake(req.body)).eq("id", existing.id).select("*").single()
+      : await supabase.from("contact").insert(toSnake(req.body)).select("*").single();
     if (error) throw error;
     res.json(toCamel(data));
   } catch (e) {
@@ -293,7 +317,7 @@ router.post("/media", requireAuth, upload.single("file"), async (req, res) => {
     if (!req.file) return res.status(400).json({ message: "Image file is required" });
     const { data, error } = await supabase.from("media").insert({
       title: req.body.title || req.file.originalname,
-      url: publicUrl(req.file),
+      url: (await uploadToStorage(req.file)).url,
       kind: req.body.kind === "poster" ? "poster" : "image",
     }).select("*").single();
     if (error) throw error;
@@ -323,6 +347,7 @@ router.delete("/media/:id", requireAuth, async (req, res) => {
 
   const { error } = await supabase.from("media").delete().eq("id", req.params.id);
   if (error) return res.status(400).json({ message: error.message });
+  await deleteFromStorage(media.url);
   if (media.url.startsWith("/uploads/")) {
     fs.rm(path.join(uploadDir, path.basename(media.url)), { force: true }, () => {});
   }
@@ -330,11 +355,19 @@ router.delete("/media/:id", requireAuth, async (req, res) => {
 });
 
 router.get("/stats", async (_req, res) => {
-  const [{ data: stats }, { count: totalAgents }, { data: leaderboard }] = await Promise.all([
+  const [statsResult, agentsResult, leaderboardResult] = await Promise.all([
     supabase.from("stats").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("agents").select("id", { count: "exact", head: true }),
     supabase.from("leaderboard").select("xp"),
   ]);
+  if (statsResult.error || agentsResult.error || leaderboardResult.error) {
+    return res.status(500).json({
+      message: statsResult.error?.message || agentsResult.error?.message || leaderboardResult.error?.message || "Failed to load stats",
+    });
+  }
+  const stats = statsResult.data;
+  const totalAgents = agentsResult.count;
+  const leaderboard = leaderboardResult.data;
   const totalXpEarned = (leaderboard || []).reduce((sum, item) => sum + Number(item.xp || 0), 0);
 
   res.json({
