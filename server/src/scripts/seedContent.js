@@ -107,6 +107,25 @@ export async function seedDefaultContent() {
   if (existingStats) await supabase.from("stats").update(stats).eq("id", existingStats.id);
   else await supabase.from("stats").insert(stats);
 
+  const siteDefaults = {
+    home: {
+      titleLine1:"CODEOPS",
+      titleLine2:"Cyber Operations",
+      titleLine3:"Command Centre",
+      description:"A command centre for builders, competitors, and operators. Learn, build, compete, and lead — every mission logged, every agent ranked.",
+      joinLabel:"Join Mission",
+      eventsLabel:"Explore Events",
+      agentsLabel:"Access Database"
+    },
+    sections: {
+      home:true, stats:true, missionControl:true, events:true, notifications:true,
+      agents:true, leaderboard:true, gallery:true, posters:true, contact:true
+    }
+  };
+  const { data: existingSettings } = await supabase.from("site_settings").select("id").limit(1).maybeSingle();
+  if (existingSettings) await supabase.from("site_settings").update(siteDefaults).eq("id", existingSettings.id);
+  else await supabase.from("site_settings").insert(siteDefaults);
+
   console.log("Default CodeOPS content initialized.");
 }
 
