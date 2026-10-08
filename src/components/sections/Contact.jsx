@@ -1,0 +1,16 @@
+import { useEffect, useState } from "react";
+import { Mail, Send } from "lucide-react";
+import { FaFacebookF, FaLinkedinIn, FaInstagram, FaDiscord } from "react-icons/fa";
+import SectionHeading from "../ui/SectionHeading";
+import GlowCard from "../ui/GlowCard";
+import Reveal from "../ui/Reveal";
+import { api } from "../../lib/api";
+
+const fallback={facultyCoordinator:"Sai Kalyan, Rupa Santoshi, Sashivanth — Dept. of CSD",hod:"Shanthi Makka — Dept. of CSD",email:"VCE",facebook:"",linkedin:"",instagram:"https://www.instagram.com/codex_vce",discord:"",mapUrl:"https://www.google.com/maps?q=Vardhaman%20College%20of%20Engineering&output=embed"};
+
+export default function Contact(){
+ const [contact,setContact]=useState(fallback); const [sent,setSent]=useState(false);
+ useEffect(()=>{api.contact.get().then(data=>setContact({...fallback,...data})).catch(()=>{});},[]);
+ const socials=[["facebook",FaFacebookF,"FaceBook"],["linkedin",FaLinkedinIn,"LinkedIn"],["instagram",FaInstagram,"Instagram"],["discord",FaDiscord,"Discord"]];
+ return <section id="contact" className="relative py-24 px-4 md:px-8"><div className="max-w-6xl mx-auto"><Reveal><SectionHeading title="Contact" accent="#FF3B3B"/></Reveal><div className="grid lg:grid-cols-2 gap-8"><Reveal><GlowCard accent="alert" className="h-full"><h3 className="font-display text-sm text-white mb-4 uppercase tracking-widest">Command Info</h3><div className="space-y-3 text-sm text-white/60"><div><span className="text-white/40 text-xs block">Faculty Coordinator</span>{contact.facultyCoordinator}</div><div><span className="text-white/40 text-xs block">HOD</span>{contact.hod}</div><div className="flex items-center gap-2"><Mail size={14}/>{contact.email}</div></div><div className="mt-6 flex gap-4 text-white/50">{socials.map(([key,Icon,label])=>contact[key]&&<a key={key} href={contact[key]} target="_blank" rel="noreferrer" aria-label={label} className="hover:text-[#00FF88]"><Icon size={18}/></a>)}</div>{contact.mapUrl&&<div className="mt-6 rounded-lg overflow-hidden border border-white/10 h-48"><iframe title="Club location" className="w-full h-full grayscale contrast-125 opacity-70" src={contact.mapUrl} loading="lazy"/></div>}</GlowCard></Reveal><Reveal delay={0.1}><GlowCard className="h-full">{sent?<div className="text-center py-10 text-[#00FF88] font-mono text-sm">Transmission received. An operator will respond shortly.</div>:<form onSubmit={e=>{e.preventDefault();setSent(true);}} className="space-y-4"><input required placeholder="Callsign / Name" className="w-full glass rounded-md px-4 py-3 text-sm outline-none placeholder:text-white/30"/><input required type="email" placeholder="Email" className="w-full glass rounded-md px-4 py-3 text-sm outline-none placeholder:text-white/30"/><textarea required rows={4} placeholder="Transmission..." className="w-full glass rounded-md px-4 py-3 text-sm outline-none placeholder:text-white/30"/><button type="submit" className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-md bg-[#FF3B3B] text-black font-mono text-xs font-bold uppercase tracking-wider hover:brightness-110 transition">Send <Send size={14}/></button></form>}</GlowCard></Reveal></div></div></section>;
+}
