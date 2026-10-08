@@ -137,3 +137,9 @@ alter table media enable row level security;
 alter table contact enable row level security;
 alter table stats enable row level security;
 alter table site_settings enable row level security;
+
+
+-- Supabase Storage bucket for all CodeOPS uploaded media.
+insert into storage.buckets (id, name, public)
+values ('codeops-media', 'codeops-media', true)
+on conflict (id) do update set public = true;
