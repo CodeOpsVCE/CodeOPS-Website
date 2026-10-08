@@ -314,7 +314,11 @@ const rollNumberOrderValue=(value)=>{const raw=String(value||"").trim().toUpperC
       const aw = wing(a.position), bw = wing(b.position);
       if (aw !== bw) return aw.localeCompare(bw, undefined, { numeric: true });
     }
-    const ak = rollNumberOrderValue(a.rollNumber), bk = rollNumberOrderValue(b.rollNumber);\n    for (let i = 0; i < 2; i += 1) {\n      if (ak[i] !== bk[i]) return ak[i] - bk[i];\n    }\n    return ak[2].localeCompare(bk[2]);
+    const ak = rollNumberOrderValue(a.rollNumber), bk = rollNumberOrderValue(b.rollNumber);
+    for (let i = 0; i < 2; i += 1) {
+      if (ak[i] !== bk[i]) return ak[i] - bk[i];
+    }
+    return ak[2].localeCompare(bk[2]);
   }
 
   const sortedAgentsForAdmin = [...agents].sort((a, b) => {
