@@ -81,31 +81,48 @@ export default function AdminPanel() {
     setAgent(emptyAgent); setGalleryItem(emptyGallery); setPoster(emptyPoster); setAlert(emptyAlert);
   };
 
+  async function loadData(current) {
+    const [e,l,a,g,p,al,c,settings,s] = await Promise.all([
+      api.events(), api.leaderboard.list(), api.agents.list(), api.gallery.list(), api.posters.list(), api.alerts.list(),
+      api.contact.get(), api.siteSettings.get(), api.stats.get()
+    ]);
+    setEvents(e); setLeaderboard(l); setAgents(a); setGallery(g); setPosters(p); setAlerts(al);
+    setContact(Object.fromEntries(Object.keys(emptyContact).map((key) => [key, c?.[key] || ""])));
+    setHomeContent({ ...emptyHome, ...(settings?.home || {}) });
+    setSections(settings?.sections || { home:true, stats:true, missionControl:true, events:true, notifications:true, agents:true, leaderboard:true, gallery:true, posters:true, contact:true });
+    setStats({ communityMembers: s?.communityMembers || 0, projectsCompleted: s?.projectsCompleted || 0, workshopsConducted: s?.workshopsConducted || 0, hackathonsOrganised: s?.hackathonsOrganised || 0 });
+    if (current?.role === "superadmin") setAdmins(await api.admins());
+    setMedia(await api.media.list());
+  }
+
   async function loadAll() {
     try {
       const { admin: current } = await api.me();
       setAdmin(current);
-      const [e,l,a,g,p,al,c,settings,s] = await Promise.all([
-        api.events(), api.leaderboard.list(), api.agents.list(), api.gallery.list(), api.posters.list(), api.alerts.list(),
-        api.contact.get(), api.siteSettings.get(), api.stats.get()
-      ]);
-      setEvents(e); setLeaderboard(l); setAgents(a); setGallery(g); setPosters(p); setAlerts(al);
-      setContact(Object.fromEntries(Object.keys(emptyContact).map((key) => [key, c?.[key] || ""])));
-      setHomeContent({ ...emptyHome, ...(settings?.home || {}) });
-      setSections(settings?.sections || { home:true, stats:true, missionControl:true, events:true, notifications:true, agents:true, leaderboard:true, gallery:true, posters:true, contact:true });
-      setStats({ communityMembers: s?.communityMembers || 0, projectsCompleted: s?.projectsCompleted || 0, workshopsConducted: s?.workshopsConducted || 0, hackathonsOrganised: s?.hackathonsOrganised || 0 });
-      if (current.role === "superadmin") setAdmins(await api.admins());
-      setMedia(await api.media.list());
-    } catch { setAdmin(null); } finally { setLoading(false); }
+      await loadData(current);
+    } catch (e) {
+      setAdmin(null);
+      if (e?.message && !e.message.toLowerCase().includes("authentication")) fail(e);
+    } finally {
+      setLoading(false);
+    }
   }
-
   useEffect(() => { loadAll(); }, []);
 
   async function handleLogin(e) {
     e.preventDefault();
     try {
       const result = await api.login(login.username, login.password);
-      setAdmin(result.admin); setLogin({ username:"", password:"" }); await loadAll();
+      setAdmin(result.admin);
+      setLogin({ username:"", password:"" });
+      setLoading(true);
+      try {
+        await loadData(result.admin);
+      } catch (e) {
+        fail(e);
+      } finally {
+        setLoading(false);
+      }
     } catch (e) { fail(e); }
   }
 
