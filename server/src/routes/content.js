@@ -236,7 +236,8 @@ router.post("/event", requireAuth, upload.single("poster"), async (req, res) => 
 router.put("/event/:id", requireAuth, upload.single("poster"), async (req, res) => {
   try {
     if (req.file) {
-      const uploaded = await uploadToStorage(req.file);\n      const url = uploaded.url;
+      const uploaded = await uploadToStorage(req.file);
+      const url = uploaded.url;
       await supabase.from("media").insert({ title: req.body.title || req.file.originalname, url, kind: "poster" });
       req.body.poster = url;
     }
