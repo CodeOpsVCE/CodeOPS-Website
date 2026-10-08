@@ -7,6 +7,11 @@ export default function StatCounter({ value, label }) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    // Restart the counter whenever the server-provided value changes.
+    started.current = false;
+    setCount(0);
+
     const obs = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !started.current) {
         started.current = true;
