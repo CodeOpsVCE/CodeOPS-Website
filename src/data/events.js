@@ -1,0 +1,32 @@
+export const events = [
+  {
+    id: "CX-001",
+    title: "Inauguration Event",
+    poster: "https://placehold.co/500x650/050505/00FF88?text=CX-001",
+    description: "The official inauguration marking the launch of our club, bringing together members to celebrate the beginning of a new journey in technology, innovation, and collaboration.",
+    venue: "1009 Seminar Hall",
+    deadline: "2026-09-11T23:59:00",
+    status: "OPEN",
+    registerUrl: "https://forms.gle/example1",
+  },
+  // {
+  //   id: "CX-002",
+  //   title: "CP Dojo: Div-2 Speedrun",
+  //   poster: "https://placehold.co/500x650/050505/00D9FF?text=CX-002",
+  //   description: "Timed competitive programming round modeled on Codeforces Div-2. Live leaderboard, on-the-spot editorial after.",
+  //   venue: "Computer Lab 2",
+  //   deadline: "2026-08-20T18:00:00",
+  //   status: "OPEN",
+  //   registerUrl: "https://forms.gle/example2",
+  // },
+  // {
+  //   id: "CX-003",
+  //   title: "Recon: Intro to Web Exploitation",
+  //   poster: "https://placehold.co/500x650/050505/FF3B3B?text=CX-003",
+  //   description: "Hands-on workshop covering OWASP Top 10 basics in a safe lab environment. Beginner friendly, laptops required.",
+  //   venue: "Online — Google Meet",
+  //   deadline: "2026-08-05T17:00:00",
+  //   status: "FILLING FAST",
+  //   registerUrl: "https://forms.gle/example3",
+  // },
+];
