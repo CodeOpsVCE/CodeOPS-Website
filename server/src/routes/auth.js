@@ -27,7 +27,8 @@ router.post("/login", loginLimiter, async (req, res) => {
 
     res.cookie("codeops_token", token, {
       httpOnly: true,
-      secure: process.env.COOKIE_SECURE === "true",
+      secure: process.env.NODE_ENV === "production" && process.env.COOKIE_SECURE === "true",
+      path: "/",
       sameSite: "lax",
       maxAge: 8 * 60 * 60 * 1000,
     });
@@ -39,7 +40,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 });
 
 router.post("/logout", (req, res) => {
-  res.clearCookie("codeops_token");
+  res.clearCookie("codeops_token", { path: "/" });
   res.json({ message: "Logged out" });
 });
 
