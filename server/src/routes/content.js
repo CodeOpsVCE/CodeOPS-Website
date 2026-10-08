@@ -85,13 +85,14 @@ async function nextEventCode() {
 }
 
 function crud(table, sortColumn = "created_at", ascending = false) {
-  router.get(`/${table === "alerts" ? "alert" : table}`, async (_req, res) => {
+  const routeName = { alerts: "alert", agents: "agent", posters: "poster" }[table] || table;
+  router.get(`/${routeName}`, async (_req, res) => {
     const { data, error } = await supabase.from(table).select("*").order(sortColumn, { ascending });
     if (error) return res.status(500).json({ message: error.message });
     res.json(toCamelRows(data));
   });
 
-  router.post(`/${table === "alerts" ? "alert" : table}`, requireAuth, async (req, res) => {
+  router.post(`/${routeName}`, requireAuth, async (req, res) => {
     try {
       const { data, error } = await supabase.from(table).insert(toSnake(req.body)).select("*").single();
       if (error) throw error;
@@ -101,7 +102,7 @@ function crud(table, sortColumn = "created_at", ascending = false) {
     }
   });
 
-  router.put(`/${table === "alerts" ? "alert" : table}/:id`, requireAuth, async (req, res) => {
+  router.put(`/${routeName}/:id`, requireAuth, async (req, res) => {
     try {
       const { data, error } = await supabase.from(table).update(toSnake(req.body)).eq("id", req.params.id).select("*").maybeSingle();
       if (error) throw error;
@@ -112,7 +113,7 @@ function crud(table, sortColumn = "created_at", ascending = false) {
     }
   });
 
-  router.delete(`/${table === "alerts" ? "alert" : table}/:id`, requireAuth, async (req, res) => {
+  router.delete(`/${routeName}/:id`, requireAuth, async (req, res) => {
     const { data, error } = await supabase.from(table).delete().eq("id", req.params.id).select("id").maybeSingle();
     if (error) return res.status(400).json({ message: error.message });
     if (!data) return res.status(404).json({ message: "Not found" });
