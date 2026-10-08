@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --color-void: #050505;
+  --color-void-soft: #0a0d0a;
+  --color-neon: #00FF88;
+  --color-cyan: #00D9FF;
+  --color-alert: #FF3B3B;
+  --color-panel: rgba(10, 20, 16, 0.55);
+  --font-display: "Orbitron", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+* { box-sizing: border-box; scroll-behavior: smooth; }
+html, body, #root { background: var(--color-void); color: #d9ffe8; font-family: var(--font-mono); overflow-x: hidden; margin: 0; }
+::selection { background: var(--color-neon); color: #000; }
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #050505; }
+::-webkit-scrollbar-thumb { background: linear-gradient(#00FF88, #00D9FF); border-radius: 4px; }
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--color-cyan); outline-offset: 3px; }
+@keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.cursor-blink { animation: blink 1s step-end infinite; }
+@keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
+.scanline { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.scanline::before { content: ""; position: absolute; left: 0; right: 0; height: 40%; background: linear-gradient(to bottom, transparent, rgba(0,255,136,0.06), transparent); animation: scan 6s linear infinite; }
+@keyframes gridmove { 0% { background-position: 0 0; } 100% { background-position: 40px 40px; } }
+.cyber-grid { background-image: linear-gradient(rgba(0,255,136,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.08) 1px, transparent 1px); background-size: 40px 40px; animation: gridmove 12s linear infinite; }
+.glass { background: var(--color-panel); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(0,255,136,0.18); }
+.text-glow { text-shadow: 0 0 8px currentColor, 0 0 22px currentColor; }
+.box-glow-neon { box-shadow: 0 0 18px rgba(0,255,136,0.35), inset 0 0 24px rgba(0,255,136,0.05); }
+.box-glow-cyan { box-shadow: 0 0 18px rgba(0,217,255,0.35), inset 0 0 24px rgba(0,217,255,0.05); }
+.hex { clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; } }
