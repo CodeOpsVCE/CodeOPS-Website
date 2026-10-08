@@ -289,6 +289,7 @@ export default function AdminPanel() {
     URL.revokeObjectURL(url);
   }
 
+const rollNumberOrderValue=(value)=>{const raw=String(value||"").trim().toUpperCase();if(!raw)return [Number.MAX_SAFE_INTEGER,Number.MAX_SAFE_INTEGER,""];const prefix=raw.slice(0,-2);const suffix=raw.slice(-2);const prefixValue=/^\\d+$/.test(prefix)?Number(prefix):Number.MAX_SAFE_INTEGER;const suffixValue=suffix.split("").map((char)=>{if(/\\d/.test(char))return char;if(/[A-Z]/.test(char))return String((char.charCodeAt(0)-64)*10);return "0";}).join("");return [prefixValue,Number(suffixValue||0),raw];};
   function defaultAgentSort(a, b) {
     const value = (item) => String(item || "").trim().toLowerCase();
     const rank = (item) => {
@@ -313,7 +314,7 @@ export default function AdminPanel() {
       const aw = wing(a.position), bw = wing(b.position);
       if (aw !== bw) return aw.localeCompare(bw, undefined, { numeric: true });
     }
-    return String(a.rollNumber || "").localeCompare(String(b.rollNumber || ""), undefined, { numeric: true, sensitivity: "base" });
+    const ak = rollNumberOrderValue(a.rollNumber), bk = rollNumberOrderValue(b.rollNumber);\n    for (let i = 0; i < 2; i += 1) {\n      if (ak[i] !== bk[i]) return ak[i] - bk[i];\n    }\n    return ak[2].localeCompare(bk[2]);
   }
 
   const sortedAgentsForAdmin = [...agents].sort((a, b) => {
