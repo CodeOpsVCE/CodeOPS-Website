@@ -26,10 +26,25 @@ export default function StatsDashboard() {
 
   useEffect(() => {
     let mounted = true;
-    api.stats.get().then((data) => {
-      if (mounted) setStats({ ...EMPTY_STATS, ...data });
-    }).catch(() => {});
-    return () => { mounted = false; };
+
+    const loadStats = async () => {
+      try {
+        const data = await api.stats.get();
+        if (mounted) setStats({ ...EMPTY_STATS, ...data });
+      } catch {
+        // Keep the last successfully loaded values if the API is temporarily unavailable.
+      }
+    };
+
+    loadStats();
+    const interval = window.setInterval(loadStats, 30000);
+    window.addEventListener("focus", loadStats);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+      window.removeEventListener("focus", loadStats);
+    };
   }, []);
 
   return (
