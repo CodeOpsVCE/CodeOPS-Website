@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_URL || "https://codeops-website.onrender.com/api";
 export const ASSET_BASE = API_BASE.replace(/\/api\/?$/, "");
 export const resolveAssetUrl = (url) => url && url.startsWith("/") ? `${ASSET_BASE}${url}` : url;
 
