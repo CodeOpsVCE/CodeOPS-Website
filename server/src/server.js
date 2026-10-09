@@ -16,16 +16,27 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const normalizeOrigin = (value = "") => value.trim().replace(/\/$/, "");
 const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:5173")
   .split(",")
-  .map((origin) => origin.trim())
+  .map(normalizeOrigin)
   .filter(Boolean);
 
+// Allow the configured frontend origins and Vercel deployment URLs for this app.
+// This also tolerates CLIENT_ORIGIN values pasted with a trailing slash.
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error("Origin is not allowed by CORS"));
+    const normalizedOrigin = normalizeOrigin(origin || "");
+    const isAllowed =
+      !origin ||
+      allowedOrigins.includes(normalizedOrigin) ||
+      /^https:\/\/codeopsvce(?:-[a-z0-9-]+)?\.vercel\.app$/i.test(normalizedOrigin);
+
+    if (isAllowed) return callback(null, true);
+    console.warn("Blocked CORS origin:", origin);
+    return callback(null, false);
   },
   credentials: true,
 }));
