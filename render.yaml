@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: codeops-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_ORIGIN
+        value: https://codeopsvce.vercel.app
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SUPABASE_STORAGE_BUCKET
+        value: codeops-media
